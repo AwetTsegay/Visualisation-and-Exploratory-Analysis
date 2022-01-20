@@ -1,0 +1,239 @@
+---
+title: "lab 0"
+output: html_document
+---
+
+## Lab 0: Introduction to R
+
+- Type 'demo()' for some demos, 'help()' for on-line help, or
+- 'help.start()' for an HTML browser interface to help.
+- Type 'q()' to quit R.
+
+## Basic Commands
+
+Data frame
+
+```{r}
+x <- 17.3
+x
+7*x
+```
+
+```{r}
+remove(x) # x disappears
+```
+`getwd()` - Prints your working directory. 
+
+setwd( “the directory you want here” )
+
+Vectors (one dimensional arrays) are made like this: 
+
+```{r}
+v <- c( 1.1, 2.2, 17.3, -23, 4, 0)
+v
+v[1]
+v[2:5]
+```
+
+Logical (Boolean) vectors are useful. 
+
+Note that this is a Boolean vector, and TRUE and FALSE are printed (and entered) in capitals.
+
+Logical vectors are very useful for selecting subsets of elements of a vector. 
+
+
+```{r}
+v
+boolv <- v < 3
+boolv 
+# This returns a vector of all elements of v that are less than 3. 
+v[boolv]
+```
+
+We can write an expression that gives a logical vector inside the subscript brackets: 
+
+```{r}
+v
+v[ v < 3 ]
+```
+
+## Lists:
+
+Lists can contain elements of different types.
+
+Giving names to elements of their lists. The advantage of doing this is that you can refer to elements of a list by name, without having to remember what position they are:
+
+```{r}
+mylist <- list( alf=34, bert=c(2,3,4,5), 17.3, pain="wisdom tooth")
+mylist
+```
+
+```{r}
+mylist$alf
+mylist$pain
+```
+
+Alternatively, you can refer to them by position: 
+
+```{r}
+mylist[2]
+
+class( mylist )
+class( mylist[2] )
+```
+
+We see that mylist[2] is actually a one element list. To extract an individual element from a list by its index, we use
+
+```{r}
+mylist[[2]]
+
+class( mylist[[2]] )
+class( mylist $bert )
+```
+
+We can remove an element from a list by: 
+
+```{r}
+mylist$bert <- NULL
+mylist
+mylist$bert
+```
+
+## Data Frames
+
+A data frame is a class, designed to hold data in a convenient way. It is implemented as a list of vectors, which should be of equal lengths. 
+
+Classes in R are implemented as lists.
+
+```{r}
+### Data Frames
+mydf <- data.frame(row.names= c("alf","bert", "r2d2"),
+                   sex=c("M","F","R"),
+                   age=c(20,21,3) )
+mydf
+```
+We can use a logical vector (which we can compute in any way we like) to select a subset of rows.
+
+```{r}
+mydf[c(FALSE,TRUE,TRUE), ]
+```
+This selects the vector of ages.
+
+```{r}
+mydf$age
+```
+
+```{r}
+class( mydf)
+class(mydf$sex)
+```
+
+A character object is used to represent string values in R. We can convert character into factor:
+
+Each string (in this case “M”, “F”, 
+or “R”) is encoded as a number (the numbers 1, 2, and 3), and there is a separate (invisible) array that stores the strings.
+
+```{r}
+class(as.factor(mydf$sex))
+```
+
+## Functions
+
+Write your own function “area” to calculate the area of a circle with a given radius:
+
+```{r}
+# Functions
+area <- function(radius) {
+  pi * radius^2
+}
+area(10)
+```
+
+### The Pipe: a tidy operator for functions.
+
+%>% is a popular new operator, increasingly used to clean big, messy data sets.
+
+```{r}
+# The Pipe: a tidy operator for functions
+library(tidyr) # %>% originally from library(magrittr)
+x <- rnorm(100, mean = 100) # # 100 random normal draws
+x
+x %>% range
+```
+
+It is often used when several functions need to be applied in a row (where scale is a function to standardize a data).
+
+```{r}
+x %>% scale %>% abs %>% range %>% round(1)
+```
+
+```{r}
+y <- x %>% scale %>% abs %>% range %>% round(1)
+y
+```
+
+## Loading data
+
+```{r}
+Auto <- read.table("Auto.data")
+dim(Auto)
+#fix(Auto)
+head(Auto, 10)
+```
+
+
+```{r}
+#Auto<-read.table("Auto.data", sep=",",header=T, na.strings="?", quote="")
+Auto <- read.table("Auto.data", header=T, na.strings="?")
+#fix(Auto)
+head(Auto, 10)
+```
+
+
+```{r}
+Auto<-na.omit(Auto)
+dim(Auto)
+```
+Once the data are loaded correctly, we can use names() to check the variable names.
+
+```{r}
+names(Auto)
+```
+
+## Writing scripts in R
+
+```{r}
+### Writing scripts in R
+if (2 > 0) {
+  i <- 2
+  print (i)
+}
+```
+If the name of this file is `script.R`, you can run all these commands in one go as: source(“script.R”) Files used in this way are called scripts.
+
+## Saving plots in R
+
+It is possible to save the graph using R codes as followings:
+
+```{r}
+## Saving plots in R
+jpeg("plot1.jpg")
+cars<-c(1, 3, 6, 4, 9)
+plot(cars, type="o", col="blue")
+title(main="Autos", col.main="red", font.main=4)
+dev.off()
+
+```
+
+
+
+````
+
+````
+
+
+
+
+
+
+
