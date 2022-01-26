@@ -1,0 +1,315 @@
+---
+title: "lab 1"
+output: html_document
+---
+
+## Lab Worksheet 1 – ggplot2
+
+The aim of this lab session is to get accustomed to plotting in R using ggplot2. 
+
+### Getting started
+
+Both `ggplot2` and `gcookbook` contain datasets that we will explore.
+
+After installing these packages, you have access to a large number of datasets and plotting 
+methods. 
+
+```{r}
+# install.packages("ggplot2")
+# install.packages("gcookbook")
+library(ggplot2)
+library(gcookbook)
+```
+
+### Introduction to ggplot2
+
+ggplot2 is a package created by Hadley Wickham which defines a “grammar” for graphics based upon the work of Leland Wilkerson in his book “The Grammar of Graphics”. 
+
+The basic idea is to independently specify plot building blocks and combine them to create just about any kind of graphical display you want. 
+
+Building blocks of a graph include:
+
+- data
+- aesthetic mapping
+- geometric object
+- statistical transformations
+- scales
+- coordinate system
+- position adjustments
+- faceting
+
+The data is straightforward - the data to operate o.n
+
+An aesthetic mapping defines how variables in the dataset are connected to visual properties or outputs. 
+
+Examples include:
+
+- position (i.e., on the x and y axes)
+- color (“outside” colour)
+- fill (“inside” colour)
+- shape (of points)
+- linetype
+- size
+
+Each type of geom accepts only a subset of all aesthetics–refer to the geom help pages to see what mappings each geom accepts. Aesthetic mappings are set with the aes() function.
+
+Geometric objects are the actual marks we put on a plot and examples include:
+
+- points (geom_point, for scatter plots, dot plots, etc)
+- lines (geom_line, for time series, trend lines, etc)
+
+A plot must have at least one geom; there is no upper limit. You can add a geom to a plot using the + operator
+
+You can get a list of available geometric objects using the code below:
+
+`help.search("geom_", package = "ggplot2")`
+
+The basic template of any plot in ggplot2 is as follows
+
+```{r}
+#ggplot(data = <DATA>,
+#       mapping = aes(<MAPPING>)) +
+#  <GEOM_FUNCTION>(
+#    stat = <STAT>,
+#    position = <POSITION>
+#  ) +
+#  <COORDINATE_FUNCTION> +
+#  <FACET_FUNCTION>
+
+```
+
+There are 7 arguments, wrapped in brackets, which can be defined. Rarely will all 7 be defined. Only the first three, <DATA>, <MAPPING> and <GEOM_FUNCTION> need to be defined.
+
+
+```{r}
+# ggplot syntax looks like this
+# ggplot(dataset, aes(xaxis, yaxis)) +
+# geom_something() +
+# geom_somethingElse()
+```
+
+## Task 1: the heightweight dataset
+
+```{r}
+#Type
+heightweight
+```
+
+**heightweight** is a pre-defined data frame with data about a group of children (236 in total).
+
+1. How many rows are in heightweight? 
+2. How many columns? 
+3. What attributes of the children does the data frame “heightweight” contain?
+
+```{r}
+dim(heightweight)
+names(heightweight)
+```
+
+```{r}
+head(heightweight, 10)
+```
+
+4. Which variables are categorical? 
+5. Which variables are continuous? 
+
+(Hint: type ?heightweight to read the documentation for the dataset).
+
+```{r}
+str(heightweight)
+```
+
+**Plotting a first scatterplot.**
+
+(scatterplot is a plot with two axes, each representing a different variable. Each individual observation is showing using a single point. The position of the point is determined by the value of the variables assigned to the x and y axes for that observation.):
+
+```{r}
+p <- ggplot( heightweight, aes(x=ageYear, y=heightIn, color=sex))
+p
+```
+
+This creates a new variable p, which is of class ggplot. Check this: 
+
+```{r}
+class(p)
+str(p)
+```
+
+```{r}
+p + geom_point()
+```
+
+geom_point() can be given additional instructions for what kind of points to draw: for example will draw rather small points and
+
+```{r}
+p + geom_point(size=1.0) 
+```
+
+```{r}
+p + geom_point(size=20.0) 
+```
+
+will draw points that are too big. 
+
+We can put in other plotting instructions:
+
+```{r}
+p + geom_line()
+```
+
+What we might like is a smoothing line, which automatically shows the general trend of the scatter plot. For this we can type: 
+
+```{r}
+p + geom_point() + geom_smooth()
+```
+
+This shows clearly how the boys and girls are much the same average height until the age of 13, and then boys grow taller.
+
+```{r}
+names(heightweight) 
+```
+
+Notice that we have both height and weight. Let’s do the same plot for weight: 
+
+```{r}
+p <- ggplot( heightweight, aes(x=ageYear, y=weightLb, color=sex))
+p + geom_point() + geom_smooth()
+```
+
+Now the differences are not so obvious, but it looks a little as if girls lose weight on average around the age of 13
+
+**What would be a sensible plot to combine height and weight on one graph?** 
+
+Well body-mass index (BMI) is a combination of height and weight that should give a roughly standardized measure of body shape. 
+
+The formula for body-mass index with height in inches and weight in pounds is
+
+bmi = 703 * weight/height^2
+
+```{r}
+heightweight$heightIn
+heightweight$heightIn^2 
+heightweight$bmi <- 703 *heightweight$weightLb/heightweight$heightIn^2
+```
+
+assigns a new column of body-mass indices. Check it:
+
+```{r}
+heightweight$bmi
+```
+
+Now plot BMI against age: 
+
+```{r}
+p <- ggplot( heightweight, aes(x=ageYear, y=bmi, color=sex))
+p + geom_point() + geom_smooth()
+```
+
+This is quite an interesting graph: it shows that both boys and girls have BMIs that on average go down during puberty (they get taller and thinner), and which then increase again in the later teenage years
+
+Plotting BMI against age is a revealing graph because if remained the same shape (BMI) on average from 12 to 17, then the curves would be horizontal straight lines – so the variation in BMI during teenage years is particularly visible in this plot. We could not tell that teenagers change shape on average in this way by looking at the plots of height vs age and weight vs age 
+separately. 
+
+The shaded regions around the trend curves show reasonable ranges of uncertainty in their position, given that we only have around 200 cases.
+
+## Task 2: the diamonds dataset
+
+Go to page 84 of the “R Graphics Cookbook” (section 5.5 Dealing with Overplotting) 
+-Reproduce the plots for the diamonds dataset. 
+Note the difference between a simple command qplot, and using ggplot2.
+
+- Try out their solutions for overplotting. 
+- Now try a log-log plot. 
+- Can you suggest an approximate formula for the price of a perfect diamond as a function of its weight in carats? We will look at this problem properly in the lectures.
+
+### Dealing with Overplotting
+
+Problem: You have many points and they obscure each other.
+
+Overplotting -- With large data sets, the points in a scatter plot may obscure each other and prevent the viewer from accurately assessing the distribution of the data.
+
+Solution:
+
+If there’s a high degree of overplotting, there are a number of possible solutions:
+
+- Make the points semitransparent
+- Bin the data into rectangles (better for quantitative analysis)
+- Bin the data into hexagons
+- Use box plots
+
+Overplotting, with about 54,000 points
+
+```{r}
+sp <- ggplot(diamonds, aes(x=carat, y=price))
+sp + geom_point()
+```
+
+### 1.We can make the points semitransparent using alpha
+
+Here, we’ll make them 90% transparent by setting alpha=.1
+
+```{r}
+sp + geom_point(alpha=.1)
+```
+
+And then 99% transparent, by setting alpha=.01
+
+```{r}
+sp + geom_point(alpha=.01)
+```
+
+### 2. Another solution is to bin the points into rectangles and map the density of the points to the fill color of the rectangles
+
+```{r}
+
+```
+
+The density of points in the lower-left corner is much greater, which tells us that the vast majority of diamonds are small and inexpensive.
+
+```{r}
+sp + stat_bin2d()
+```
+
+```{r}
+sp + stat_bin2d(bins=50) +
+ scale_fill_gradient(low="lightblue", high="red", limits=c(0, 6000))
+```
+
+### 3. Another alternative is to bin the data into hexagons instead of rectangles, with stat_bin hex()
+
+```{r}
+#install.packages("hexbin")
+library(hexbin)
+
+```
+
+```{r}
+sp + stat_binhex() +
+ scale_fill_gradient(low="lightblue", high="red",
+ limits=c(0, 8000))
+```
+
+
+```{r}
+sp + stat_binhex() +
+ scale_fill_gradient(low="lightblue", high="red",
+ breaks=c(0, 250, 500, 1000, 2000, 4000, 6000),
+ limits=c(0, 6000))
+```
+
+### 4. When the data has one discrete axis and one continuous axis, it might make sense to use box plots
+
+## Overplotting can also occur when the data is discrete on one or both axes
+
+```{r}
+sp1 <- ggplot(ChickWeight, aes(x=Time, y=weight))
+sp1 + geom_point()
+sp1 + geom_point(position="jitter")
+```
+
+
+```{r}
+sp1 + geom_boxplot(aes(group=Time))
+```
+
+
