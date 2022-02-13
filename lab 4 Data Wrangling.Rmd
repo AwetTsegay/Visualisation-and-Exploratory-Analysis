@@ -1,0 +1,286 @@
+---
+title: "lab 4"
+output: html_document
+---
+
+# Data wrestling 
+
+#### As a rule of thumb, in any data science project 
+
+- at least 80% of the time and effort will be spent in wrestling the data into a correct and usable form. 
+- Less than 20% will be spent on doing something interesting.
+
+This ‘data wrestling’ consists of obtaining the data perhaps 
+
+- from databases, or 
+- from multiple sources, or 
+- if you are unlucky, by ‘scraping’ it from web-pages or 
+from social media.
+
+Once you have files of the raw data you have collected, you then need to check for mistakes and inconsistencies, and finally put the data into a format that you can visualise and analyse. 
+
+**During this process, it is typical to find:** 
+
+- gross labeling errors; 
+- database join errors; 
+- incomprehensible and undocumented descriptions of what the data means; 
+- missing values indicated in many different ways;
+- inconsistencies in the formatting of numbers; 
+- inconsistencies in the units in which measurements are made; 
+- measurements with the same label but different meanings; 
+- annoying errors by data import programs that corrupt your entire table; 
+- slightly different strings all referring to the same entity; 
+-and lots of errors not in this list. 
+
+Expect the unexpected. 
+
+The only joy in data wrestling is that, unlike in real wrestling, you will eventually win. 
+
+The following practical gives you a just a taste of this process. You are strongly advised to work through it because afterwards you will be more confident in 
+
+* sourcing, 
+* cleaning, and 
+* importing your own data in the future. 
+
+It is not a pleasant practical to do – think of it as eating spinach.
+
+## 1. Getting the data
+
+Copy the table of data from the web page <http://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html>and paste it into a text file, or use the provided text file PlanetData.txt . Use a text editor to open the file and inspect it. The data is all there - but it is not yet clean!
+
+## 2. Excel is your (unreliable) friend
+
+As a general rule, use the software that is most suitable for the job at hand. For inspecting and hand-editing tables of data, Excel is ideal. Very large amounts of 2 money and effort have been spent on making Excel foolproof and easy to use, so let’s use it to clean up the data.
+
+#### **Comma-separated values: .csv files**
+
+For exporting data from Excel and importing to other programs, I personally recommend using .csv files. The advantage is that these are plain text files, so you can see completely what is in them, and you can inspect and edit them with many different editors.
+
+You can create a .csv file by using the save as option on Excel, and then choosing the file type as csv. 
+
+The disadvantage of .csv files is that the .csv format is not completely standardized. Take a look at the Wikipedia article on comma-separated-values, <https://en.wikipedia.org/wiki/Comma-separated_values>
+
+The rules for data that it contains commas and quotation marks are not completely standardized, so that glitches can occur. 
+
+#### **Be wary of data import utilities**
+
+In the documentation for Rstudio, you will find a description of a data import utility in the GUI. It is in the drop-down menu in the Environment pane. How convenient! We could import delimited files, like .csv files, with point-and-click. 
+
+At this point, the experienced data scientist will shudder. Hmmm. Does the Rstudio facility call 
+
+- the R function `read.csv`, or 
+- is it different code entirely? 
+- If it is different code, will it be properly maintained? 
+
+There is a function `read.csv()` which is a part of the core R language, and it will (almost surely) work, because bugs will have been reported and fixed. The Rstudio function is likely to be less well maintained, and perhaps less robust. So (for me) it proved: I found that importing with my Rstudio utility did not work properly. 
+
+So use R’s core read.csv function (remember that function and variable names can have dots in them in R), and read in the data with the line: 
+
+```{r}
+planet <- read.csv("PlanetData1.csv")
+str(planet)
+```
+
+Now look at planet using
+
+```{r}
+head(planet, 20)
+```
+
+#### **Transposing rows and columns**
+
+Ouch! This does not look like the data we want.
+
+The table has one column per planet, and a different type of measurement in each row. This means that each column contains both numbers and strings (the distance from the sun is a number, but whether the planet has a ring system is a string). 
+
+Now R stores a dataframe as a list of columns, 
+
+- where each column is a vector of elements of a single type. 
+- (Actually, columns can contain elements of a single type, and 
+-also the special `NA value`, which means `‘not applicable’`, which typically means that the value is missing. 
+-But a column cannot contain both numbers and strings.)
+
+Try importing the .csv table as it is, and look at the types of the columns. You should find that the columns have been imported as vectors of strings, not numbers and strings. This is useless: we need to transpose the data so that each column is a type of measurement, and each row is a planet. 
+
+The easiest way to do this is in Excel. Go back to working in Excel. Select all the data, and copy it to the clipboard. Open a new worksheet, and use paste special with the transpose option, to get a new, transposed table of data. 
+
+(There are functions in R to do this, but I found that Excel was much simpler.)
+
+#### **Numbers imported as strings**
+
+Now save the new transposed table as a .csv file. Import it into R by typing 
+
+```{r}
+planet <- read.csv("PlanetData2.csv")
+str(planet)
+```
+
+```{r}
+head(planet, 10)
+```
+
+Also, we need to convert all character columns (i.e. name, ring and magnetic) to factor in R.
+
+```{r}
+names(planet)
+```
+
+Let's rename the columns
+
+
+```{r}
+planet <- read.csv("PlanetData3.csv")
+names(planet)
+```
+
+
+```{r}
+head(planet)
+```
+
+```{r}
+#planet$name <- as.factor(planet$name)
+#planet$ring <- as.factor(planet$ring)
+#planet$magnetic <- as.factor(planet$magnetic)
+```
+
+Now **check the types of all the columns.** You can do this using the str() 
+function: 
+
+```{r}
+str(planet)
+```
+
+which prints out the detailed structure of the dataframe, giving the type of each column, and some of the values. You should find that all the columns are either numeric (listed as num) or else are Factor, which is how strings are converted. 
+
+If you find numbers that have been read in as strings, then something has gone horribly wrong. You need to fix the number formatting in the Excel spreadsheet, and then try again. 
+
+#### **Missing values and NA**
+
+Notice that in your dataframe, some values will be printed as NA, which means ‘not applicable’, or missing. This is a very useful feature of dataframes – you can use the special value NA to show that a value is unknown or missing. 
+
+However, if you look at the planet data carefully, you will find that some values are listed as `"unknown"` rather than NA. Fix this by editing the spreadsheet to put `NA` wherever a value is unknown, then load the planet data again. 
+
+#### **Nice attribute names**
+
+When you import the current .csv file into R, you will find that the column names are inconveniently long and strangely formatted. Go back to Excel, edit the column names into shorter names that are easier to type and to read, then load the data again. 
+
+I used the function `names(planet)`:
+
+(Make sure the first column has the name “name”, to indicate that this column is the names of the planets. ) Don’t include extra spaces, extra commas, etc in your names. 
+
+```{r}
+planet <- read.csv("PlanetData.csv")
+
+planet$name <- as.factor(planet$name)
+planet$ring <- as.factor(planet$ring)
+planet$magnetic <- as.factor(planet$magnetic)
+
+names(planet)
+str(planet)
+head(planet)
+```
+
+#### **Hidden spaces in strings**
+
+The single thing that delayed me most in preparing this data for you – the glitch that it took me the longest time to find and which made me doubt my own sanity for 20 minutes – is that in the file I downloaded, the planet names have an extra space on either side of them. This means that they are read into R with names such as “ MERCURY “ instead of “MERCURY” and “ MOON “ instead of “MOON”. It will save confusion later if you edit the .csv file now with a text editor, and just delete all these extra spaces. This is easier to do in a text editor than in Excel. 
+
+Later we will want to write, for example,
+`planetsonly <- subset(planets, name != “MOON” )`
+to select the data for all the planets which are not the moon, and it will cause repeated confusion if we have to keep writing “ MOON “ instead of “MOON”. 
+
+#### **Plotting the data**
+
+At last, you should have a data table called planet, and if you inspect it using str(planet) you should get the output: 
+```{r}
+planet <- read.csv("cheat.csv")
+
+planet$name <- as.factor(planet$name)
+planet$ring <- as.factor(planet$ring)
+planet$magnetic <- as.factor(planet$magnetic)
+
+names(planet)
+str(planet)
+head(planet)
+```
+
+If you don’t have a data table like this, look at the .csv file you are reading in, and find out what is wrong with it. 
+
+At this point, you can cheat and load the `cheat.csv` file I have uploaded but I really recommend that you fix 
+your own data file.
+
+**Plot orbitperiod against distancefromsun**
+
+```{r}
+library(ggplot2)
+p <- ggplot(planet, aes(x=distancefromsun,y=orbitperiod)) + geom_point()
+p
+```
+
+```{r}
+p + scale_x_log10() + scale_y_log10()
+```
+
+
+```{r}
+p <- ggplot(planet, aes(x=distancefromsun, y=orbitperiod, label=name)) + 
+geom_point() + scale_x_log10() + scale_y_log10() + geom_text(hjust=0,size=3)
+p
+```
+
+
+```{r}
+p <- ggplot(planet, aes(x=distancefromsun,y=orbitperiod,label=name)) + 
+geom_point() + scale_x_log10() + scale_y_log10() + 
+geom_text(hjust=0,nudge_x=0.05,size=3)
+p
+```
+
+That’s better: the labels are slightly offset from the points. 
+
+We can see clearly that something may be wrong: all the planets are in a very straight line, but the moon is a clear outlier, with a very small distance from the sun. What has happened? 
+
+Go back to the original NASA web page, <http://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html> and figure out what is wrong, before reading on. You may need to look at the notes in <http://nssdc.gsfc.nasa.gov/planetary/factsheet/planetfact_notes.html> which gives more detailed (but still incomplete) explanations of what all the measurements are.
+
+You will see that there is a note that the “distance from the sun” for the moon is **in fact its distance from the Earth!** The meaning of this measurement is completely different from all the other measurements, and the orbital period of the moon is also different: it is the number of (Earth) days it takes for the moon to orbit the Earth! This point has no business being on the same graph as the other points, **so let’s remove the data for the moon from the planet data frame.** 
+
+This is a typical example of finding a measurement or attribute column with inconsistent meanings. It’s not a mistake: the NASA scientist who compiled this table was putting in interesting information, and he(?) felt that it was neater to put in information about the moon and the earth, without making a whole new table. 
+
+**So let us take the “MOON” row out. Try**
+
+```{r}
+planet <- planet[planet$name != "MOON",] 
+# or planet <- subset( planet, name != "MOON")
+```
+
+Check the result by typing `str(planet)`. Either of these methods should work. 
+
+```{r}
+str(planet)
+```
+
+Now you can plot plenty of relationships: investigate how each of the following measurements varies with log distance from the sun, using log scales as appropriate: 
+
+orbitalperiod, orbitalvelocity, lengthofday, temperature, density, mass, number 
+of moons. 
+
+For rotationperiod (the time for the planet to rotate on its axis, with negative values for rotation in the opposite sense to its orbit), some values are very high. Is it more sensible to plot rotationperiod, or 1/rotationperiod ? Plot both vs distance from sun, and compare.
+
+You will find that some relationships seem exact laws of nature, and others are just general tendencies. 
+
+Kepler’s third law of planetary motion (he discovered it in 1609) relates orbital period with distance from sun (and so also implies a relationship of orbitalvelocity with distancefromsun).
+
+<https://en.wikipedia.org/wiki/Kepler's_laws_of_planetary_motion> 
+
+If you read this section on formation of the solar system, 
+<https://en.wikipedia.org/wiki/Formation_and_evolution_of_the_Solar_System#Formation_of_the_planets>
+
+you will find that outer planets formed beyond the ‘frost line’ in the solar system, and so could accumulate frozen gases, while the inner rocky planets (Mercury, Venus, Earth, and Mars) formed too close to the sun to be able to retain these frozen gases, so they are denser and smaller. 
+
+Pluto was recently declared not to be a planet. Is this reasonable?
+
+#### And finally…
+
+Is all of our data correct even now? By this time you should be wary. For every outlier, you may suspect a data error. I think it is correct, but you may find an error.
+
+
