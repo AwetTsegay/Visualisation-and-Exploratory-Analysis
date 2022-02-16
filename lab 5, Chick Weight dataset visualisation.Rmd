@@ -1,0 +1,200 @@
+---
+title: "lab 5: Chick Weight dataset visualisation"
+output: html_document
+---
+
+The aim of this lab is to understand **split-apply-combine pattern** and apply the pattern to `ChickWeight dataset`.
+
+```{r}
+#install.packages("datasets") 
+library(datasets)
+#data()
+```
+
+Now look at ChickWeight dataset. This gives the data from the experiment described in the lecture on "Data Wrangling".
+
+The `ChickWeight data` frame has 578 rows and 4 columns. It has 4 variables:
+
+- weight - a numeric value giving the body weight of the chick (gm). 
+- Time - the number of days since birth when the measurement was made. 
+- Chick - a unique identifier for the chick. 
+- Diet - indicating which experimental diet the chick received.
+
+```{r}
+head(ChickWeight)
+str(ChickWeight)
+names(ChickWeight)
+```
+
+It’s annoying that some of the names are capitalized and some are not. We can fix this and have everything lower case: 
+
+```{r}
+chickweight <- ChickWeight
+names(chickweight) <- tolower(names(chickweight))
+#?tolower
+str(chickweight)
+names(chickweight)
+```
+
+Good! 
+A graphical overview of the dataset can be done:
+
+```{r}
+boxplot(weight~time, data = chickweight, 
+        xlab="time", ylab="weight")
+#?boxplot
+```
+
+## Subset data
+
+If we only want the weights of each chick on day 21, we can subset the data:
+
+```{r}
+cw21 <- subset(chickweight, time == 21)
+summary(cw21)
+
+#?summary
+#?subset
+#is.na(chickweight)
+#?is.na
+#anyNA(chickweight, recursive = FALSE)
+```
+
+To make `cw21` we used conditional subsetting (time == 21). Available comparison operators are:
+
+- < less than
+- ( > greater than)
+- == equal to
+- <= less than or equal to
+- (>= greater than or equal to)
+- != NOT equal to (! symbol indicates negation)
+- is.na(x) tests if x has missing values
+
+Logical operators to combine expressions are also available:
+
+- & logical AND
+- ( | logical OR)
+- ! logical NOT (negation)
+
+**Sometimes, we want to subset based on multiple variables,** 
+
+for example, we canfind how many chicks on diet 1 have weights over 250 on day 21:
+
+```{r}
+cw21.subset2 <- cw21[(cw21$diet == "1" & cw21$weight >= 250), ]
+cw21.subset2
+```
+
+## Using plyr package
+
+Now let’s use `plyr`:
+
+```{r}
+#?plyr
+#install.packages("plyr")
+library(plyr) 
+library(ggplot2)
+```
+
+#### Let’s plot the weight of each chick as a function of time. 
+
+This requires a little thought. 
+
+- x will be time; 
+- y will be weight. 
+
+But we want a separate line for each chick - but it might be best if the lines are coloured according to diet. 
+
+There are lots of chicks so we don’t want a different colour for each chick - there will be too many, and the whole point is to distinguish the effects of the diets. 
+
+```{r}
+p <- ggplot(chickweight,aes(x=time,y=weight, 
+                            colour=diet, 
+                            group=chick)) + geom_line()
+p
+#?ggplot
+```
+
+What do you see? 
+
+Let’s summarise to mean weight for each diet on each day.
+
+```{r}
+chicksummary1 <- ddply( chickweight, .(diet,time), summarise,
+                        meanweight=mean(weight) )
+str(chicksummary1) 
+names( chicksummary1)
+chicksummary1
+#?ddply
+```
+
+Now let’s plot it:
+
+```{r}
+p <- ggplot( chicksummary1,aes(x=time,y=meanweight,colour=diet)) +geom_line()
+p
+```
+
+What do you see?
+
+**Try using a log scale for the y axis** 
+
+- what do you see? 
+- Is the chick growth exponential for part of the time? 
+- Is this reasonable?
+
+```{r}
+p + scale_y_log10()+ylab("log of meanweight")
+```
+
+## Challenges:
+
+#### 1. Use `ddply` to produce other summaries.
+
+- How many chicks were fed each diet?
+- How many chicks, fed each diet, died early? Which day did they die?
+
+**How many chicks were fed each diet?**
+
+```{r}
+chicksummary2a <- ddply(chickweight, .(diet), summarise,
+                         numberofchick=max(chick))
+chicksummary2a
+```
+
+**How many chicks, fed each diet, died early? Which day did they die?**
+
+```{r}
+chicksummary1b <- ddply( chickweight, .(diet), summarise,
+             lastday=max(time),numberofchick=max(chick))
+chicksummary1b
+```
+
+#### 2. Create an individual facet for each diet within the dataset to show the relationship between times and weights.
+
+```{r}
+p <- ggplot(chickweight, aes(x=time, y=weight, colour=diet)) + geom_point()
+
+p+facet_grid(diet~.)
+
+# ?geom_point()
+# ?facet_grid
+```
+
+#### 3. Do the line plots we have done show that one diet is better than another? 
+
+(Hint: they don’t ! Not quite.) What would be a better plot to compare how heavy chicks raised on different diets became? 
+
+(Hint: boxplots. Look up notched boxplots on page 133 in the “R Graphics Cookbook” by Winston Chang. )
+
+```{r}
+ggplot(chickweight, aes(x=time,y=weight, 
+                        colour=diet, group=chick))+ geom_boxplot()+ scale_x_continuous(breaks = NULL)
+
+# ?geom_boxplot()
+# ?scale_x_continuous
+```
+
+````
+
+````
